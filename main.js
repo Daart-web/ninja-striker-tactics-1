@@ -1,6 +1,8 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+alert("JS CARREGADO COM SUCESSO");
+
 canvas.width = 800;
 canvas.height = 500;
 canvas.style.width = "800px";
