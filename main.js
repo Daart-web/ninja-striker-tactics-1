@@ -1,6 +1,3 @@
-<canvas id="gameCanvas"></canvas>
-
-<script>
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
@@ -65,23 +62,17 @@ function isAdjacent(a, b) {
   return Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1;
 }
 
-function getGridPos(mx, my) {
-  return {
-    x: Math.floor((mx - OFFSET_X) / TILE),
-    y: Math.floor((my - OFFSET_Y) / TILE)
-  };
-}
-
-// CLIQUE ÚNICO: mover OU atacar
+// CLIQUE: mover OU atacar
 canvas.addEventListener("click", e => {
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
 
-  const g = getGridPos(mx, my);
+  const gx = Math.floor((mx - OFFSET_X) / TILE);
+  const gy = Math.floor((my - OFFSET_Y) / TILE);
 
   // clique no inimigo = ataque
-  if (g.x === enemy.x && g.y === enemy.y) {
+  if (gx === enemy.x && gy === enemy.y) {
     if (isAdjacent(player, enemy)) {
       enemy.hp -= 15;
       if (enemy.hp < 0) enemy.hp = 0;
@@ -90,9 +81,9 @@ canvas.addEventListener("click", e => {
   }
 
   // mover
-  if (g.x >= 0 && g.x < COLS && g.y >= 0 && g.y < ROWS) {
-    player.x = g.x;
-    player.y = g.y;
+  if (gx >= 0 && gx < COLS && gy >= 0 && gy < ROWS) {
+    player.x = gx;
+    player.y = gy;
   }
 });
 
@@ -108,4 +99,3 @@ function loop() {
 }
 
 loop();
-</script>
