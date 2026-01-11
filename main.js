@@ -12,13 +12,13 @@ const OFFSET_X = 100;
 const OFFSET_Y = 100;
 
 // ESTADO
-let currentTurn = "player";
 let selected = false;
-let moveTiles = [];
+let mode = "idle"; // idle | move
+let currentTurn = "player";
 
 // PERSONAGENS
-const player = { x: 1, y: 1 };
-const enemy = { x: 4, y: 1 };
+const player = { x: 1, y: 1, hp: 100 };
+const enemy  = { x: 4, y: 1, hp: 80 };
 
 // ================= DESENHO =================
 function drawBackground() {
@@ -42,19 +42,25 @@ function drawGrid() {
   }
 }
 
-function drawCircle(char, color) {
-  const px = OFFSET_X + char.x * TILE + TILE / 2;
-  const py = OFFSET_Y + char.y * TILE + TILE / 2;
+function drawChar(c, color) {
+  const px = OFFSET_X + c.x * TILE + TILE / 2;
+  const py = OFFSET_Y + c.y * TILE + TILE / 2;
 
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(px, py, 26, 0, Math.PI * 2);
   ctx.fill();
+
+  // HP
+  ctx.fillStyle = "red";
+  ctx.fillRect(px - 25, py - 40, 50, 6);
+  ctx.fillStyle = "lime";
+  ctx.fillRect(px - 25, py - 40, c.hp / 2, 6);
 }
 
 function highlightMoves() {
-  ctx.fillStyle = "rgba(0,150,255,0.3)";
-  moveTiles.forEach(t => {
+  ctx.fillStyle = "rgba(0,150,255,0.35)";
+  getMoveTiles(player).forEach(t => {
     ctx.fillRect(
       OFFSET_X + t.x * TILE,
       OFFSET_Y + t.y * TILE,
@@ -72,33 +78,70 @@ canvas.addEventListener("click", e => {
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
 
-  const mouseX = (e.clientX - rect.left) * scaleX;
-  const mouseY = (e.clientY - rect.top) * scaleY;
+  const mx = (e.clientX - rect.left) * scaleX;
+  const my = (e.clientY - rect.top) * scaleY;
 
-  const gx = Math.floor((mouseX - OFFSET_X) / TILE);
-  const gy = Math.floor((mouseY - OFFSET_Y) / TILE);
+  const gx = Math.floor((mx - OFFSET_X) / TILE);
+  const gy = Math.floor((my - OFFSET_Y) / TILE);
 
   if (gx < 0 || gy < 0 || gx >= COLS || gy >= ROWS) return;
 
-  // Selecionar jogador
+  // Clique no jogador → entrar em modo mover
   if (gx === player.x && gy === player.y) {
-    selected = true;
-    moveTiles = getMoveTiles(player);
+    mode = "move";
     return;
   }
 
-  // Mover
-  if (selected) {
-    const valid = moveTiles.find(t => t.x === gx && t.y === gy);
+  // Movimento
+  if (mode === "move") {
+    const valid = getMoveTiles(player)
+      .some(t => t.x === gx && t.y === gy);
+
     if (valid) {
       player.x = gx;
       player.y = gy;
-      selected = false;
-      moveTiles = [];
-      currentTurn = "enemy";
-      setTimeout(() => currentTurn = "player", 500);
+      mode = "idle";
+      endTurn();
     }
   }
 });
 
-function getMoveTi
+function getMoveTiles(c) {
+  const dirs = [
+    { x: 1, y: 0 },
+    { x: -1, y: 0 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 }
+  ];
+
+  return dirs
+    .map(d => ({ x: c.x + d.x, y: c.y + d.y }))
+    .filter(t =>
+      t.x >= 0 && t.y >= 0 &&
+      t.x < COLS && t.y < ROWS &&
+      !(t.x === enemy.x && t.y === enemy.y)
+    );
+}
+
+// ================= TURNO =================
+function endTurn() {
+  currentTurn = "enemy";
+  setTimeout(enemyTurn, 700);
+}
+
+function enemyTurn() {
+  player.hp -= 10;
+  currentTurn = "player";
+}
+
+// ================= LOOP =================
+function loop() {
+  drawBackground();
+  drawGrid();
+  if (mode === "move") highlightMoves();
+  drawChar(player, "#4fc3f7");
+  drawChar(enemy, "#ef5350");
+  requestAnimationFrame(loop);
+}
+
+loop();
