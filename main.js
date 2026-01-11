@@ -121,6 +121,12 @@ canvas.addEventListener("click", e => {
 
 // ================= LOOP =================
 function loop() {
+  
+  setInterval(() => {
+  ctx.fillStyle = "yellow";
+  ctx.fillRect(0, 0, 30, 30);
+}, 500);
+
   drawBackground();
   drawGrid();
 
