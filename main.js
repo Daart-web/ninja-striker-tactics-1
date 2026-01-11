@@ -1,7 +1,7 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-/* FIX CRÍTICO */
+/* FIX CANVAS */
 canvas.width = 800;
 canvas.height = 500;
 canvas.style.width = "800px";
@@ -19,8 +19,8 @@ let mode = "idle"; // idle | move | attack
 let turn = "player";
 
 // PERSONAGENS
-const player = { x: 1, y: 1, hp: 100 };
-const enemy = { x: 4, y: 1, hp: 80 };
+const player = { x: 1, y: 1, hp: 100, maxHp: 100 };
+const enemy  = { x: 4, y: 1, hp: 80,  maxHp: 80  };
 
 // ================= DESENHO =================
 function drawBackground() {
@@ -48,19 +48,27 @@ function drawChar(c, color) {
   const px = OFFSET_X + c.x * TILE + TILE / 2;
   const py = OFFSET_Y + c.y * TILE + TILE / 2;
 
+  // personagem
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(px, py, 26, 0, Math.PI * 2);
   ctx.fill();
 
-  // HP
+  // barra de vida (SEM BUG)
+  const barW = 50;
+  const hpRatio = c.hp / c.maxHp;
+
+  ctx.fillStyle = "black";
+  ctx.fillRect(px - barW / 2 - 1, py - 42 - 1, barW + 2, 8);
+
   ctx.fillStyle = "red";
-  ctx.fillRect(px - 25, py - 40, 50, 6);
+  ctx.fillRect(px - barW / 2, py - 42, barW, 6);
+
   ctx.fillStyle = "lime";
-  ctx.fillRect(px - 25, py - 40, c.hp / 2, 6);
+  ctx.fillRect(px - barW / 2, py - 42, barW * hpRatio, 6);
 }
 
-function highlightTiles(list, color) {
+function highlight(list, color) {
   ctx.fillStyle = color;
   list.forEach(t => {
     ctx.fillRect(
@@ -73,7 +81,7 @@ function highlightTiles(list, color) {
 }
 
 // ================= LÓGICA =================
-function getAdjacent(c) {
+function adjacent(c) {
   return [
     { x: c.x + 1, y: c.y },
     { x: c.x - 1, y: c.y },
@@ -98,17 +106,17 @@ canvas.addEventListener("click", e => {
 
   if (gx < 0 || gy < 0 || gx >= COLS || gy >= ROWS) return;
 
-  // Clique no player → alterna modo
+  // Clique no jogador → ciclo de ação
   if (gx === player.x && gy === player.y) {
-    mode = mode === "attack" ? "move" : "attack";
+    if (mode === "idle") mode = "move";
+    else if (mode === "move") mode = "attack";
+    else mode = "idle";
     return;
   }
 
-  // Movimento
+  // MOVIMENTO
   if (mode === "move") {
-    const ok = getAdjacent(player)
-      .some(t => t.x === gx && t.y === gy);
-    if (ok) {
+    if (adjacent(player).some(t => t.x === gx && t.y === gy)) {
       player.x = gx;
       player.y = gy;
       mode = "idle";
@@ -116,16 +124,15 @@ canvas.addEventListener("click", e => {
     }
   }
 
-  // Ataque
+  // ATAQUE
   if (mode === "attack") {
     const hit =
       gx === enemy.x &&
       gy === enemy.y &&
-      getAdjacent(player)
-        .some(t => t.x === gx && t.y === gy);
+      adjacent(player).some(t => t.x === gx && t.y === gy);
 
     if (hit) {
-      enemy.hp -= 20;
+      enemy.hp = Math.max(0, enemy.hp - 20);
       mode = "idle";
       endTurn();
     }
@@ -137,7 +144,7 @@ function endTurn() {
   turn = "enemy";
   setTimeout(() => {
     turn = "player";
-  }, 700);
+  }, 600);
 }
 
 // ================= LOOP =================
@@ -146,10 +153,10 @@ function loop() {
   drawGrid();
 
   if (mode === "move")
-    highlightTiles(getAdjacent(player), "rgba(0,150,255,0.4)");
+    highlight(adjacent(player), "rgba(0,150,255,0.4)");
 
   if (mode === "attack")
-    highlightTiles(getAdjacent(player), "rgba(255,80,80,0.4)");
+    highlight(adjacent(player), "rgba(255,80,80,0.4)");
 
   drawChar(player, "#4fc3f7");
   drawChar(enemy, "#ef5350");
