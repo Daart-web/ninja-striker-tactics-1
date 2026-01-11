@@ -102,11 +102,15 @@ canvas.addEventListener("click", e => {
   if (currentTurn !== "player") return;
 
   const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left - OFFSET_X;
-  const my = e.clientY - rect.top - OFFSET_Y;
 
-  const gx = Math.floor(mx / TILE_SIZE);
-  const gy = Math.floor(my / TILE_SIZE);
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  const mouseX = (e.clientX - rect.left) * scaleX;
+  const mouseY = (e.clientY - rect.top) * scaleY;
+
+  const gx = Math.floor((mouseX - OFFSET_X) / TILE_SIZE);
+  const gy = Math.floor((mouseY - OFFSET_Y) / TILE_SIZE);
 
   if (gx < 0 || gy < 0 || gx >= GRID_COLS || gy >= GRID_ROWS) return;
 
@@ -130,52 +134,3 @@ canvas.addEventListener("click", e => {
     }
   }
 });
-
-function getMoveTiles(char) {
-  const dirs = [
-    { x: 1, y: 0 },
-    { x: -1, y: 0 },
-    { x: 0, y: 1 },
-    { x: 0, y: -1 }
-  ];
-
-  return dirs
-    .map(d => ({ x: char.x + d.x, y: char.y + d.y }))
-    .filter(t =>
-      t.x >= 0 && t.y >= 0 &&
-      t.x < GRID_COLS && t.y < GRID_ROWS &&
-      !(t.x === enemy.x && t.y === enemy.y)
-    );
-}
-
-// ================= TURN =================
-
-function endPlayerTurn() {
-  currentTurn = "enemy";
-  setTimeout(enemyTurn, 800);
-}
-
-function enemyTurn() {
-  if (enemy.hp <= 0) return;
-
-  // ataque simples
-  player.hp -= 10;
-  player.moved = false;
-  currentTurn = "player";
-}
-
-// ================= LOOP =================
-
-function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  drawGrid();
-  if (selected) highlightMoves();
-  drawCharacter(player, "#4fc3f7");
-  drawCharacter(enemy, "#ef5350");
-  drawUI();
-
-  requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
