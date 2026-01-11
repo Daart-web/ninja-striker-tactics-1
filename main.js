@@ -1,12 +1,11 @@
+<canvas id="gameCanvas"></canvas>
+
+<script>
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-alert("JS CARREGADO COM SUCESSO");
-
 canvas.width = 800;
 canvas.height = 500;
-canvas.style.width = "800px";
-canvas.style.height = "500px";
 
 // GRID
 const COLS = 6;
@@ -15,12 +14,11 @@ const TILE = 80;
 const OFFSET_X = 100;
 const OFFSET_Y = 100;
 
+let playerTurn = true;
+
 // PERSONAGENS
 const player = { x: 1, y: 1, hp: 100, maxHp: 100 };
 const enemy  = { x: 4, y: 1, hp: 80,  maxHp: 80  };
-
-// ESTADO
-let selectingMove = false;
 
 // ================= DESENHO =================
 function drawBackground() {
@@ -53,7 +51,7 @@ function drawChar(c, color) {
   ctx.arc(px, py, 26, 0, Math.PI * 2);
   ctx.fill();
 
-  // barra de vida
+  // Barra de vida
   const barW = 50;
   const hpRatio = c.hp / c.maxHp;
 
@@ -64,33 +62,17 @@ function drawChar(c, color) {
   ctx.fillRect(px - barW / 2, py - 42, barW * hpRatio, 6);
 }
 
-// ================= MOVIMENTO =================
-function getAdjacentTiles(c) {
-  return [
-    { x: c.x + 1, y: c.y },
-    { x: c.x - 1, y: c.y },
-    { x: c.x, y: c.y + 1 },
-    { x: c.x, y: c.y - 1 },
-  ].filter(t =>
-    t.x >= 0 && t.y >= 0 &&
-    t.x < COLS && t.y < ROWS
-  );
+// ================= MECÂNICAS =================
+function isAdjacent(a, b) {
+  const dx = Math.abs(a.x - b.x);
+  const dy = Math.abs(a.y - b.y);
+  return dx + dy === 1;
 }
 
-function drawMoveTiles() {
-  ctx.fillStyle = "rgba(0,150,255,0.4)";
-  getAdjacentTiles(player).forEach(t => {
-    ctx.fillRect(
-      OFFSET_X + t.x * TILE,
-      OFFSET_Y + t.y * TILE,
-      TILE,
-      TILE
-    );
-  });
-}
-
-// ================= INPUT =================
+// Movimento por clique
 canvas.addEventListener("click", e => {
+  if (!playerTurn) return;
+
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
@@ -98,44 +80,38 @@ canvas.addEventListener("click", e => {
   const gx = Math.floor((mx - OFFSET_X) / TILE);
   const gy = Math.floor((my - OFFSET_Y) / TILE);
 
-  if (gx < 0 || gy < 0 || gx >= COLS || gy >= ROWS) return;
-
-  // Clique no player → mostrar movimentos
-  if (gx === player.x && gy === player.y) {
-    selectingMove = true;
-    return;
+  if (gx >= 0 && gx < COLS && gy >= 0 && gy < ROWS) {
+    player.x = gx;
+    player.y = gy;
+    playerTurn = false;
+    setTimeout(() => playerTurn = true, 300);
   }
+});
 
-  // Clique em tile válido → mover
-  if (selectingMove) {
-    const valid = getAdjacentTiles(player)
-      .some(t => t.x === gx && t.y === gy);
+// Ataque com tecla A
+document.addEventListener("keydown", e => {
+  if (!playerTurn) return;
 
-    if (valid) {
-      player.x = gx;
-      player.y = gy;
+  if (e.key.toLowerCase() === "a") {
+    if (isAdjacent(player, enemy)) {
+      enemy.hp -= 15;
+      if (enemy.hp < 0) enemy.hp = 0;
+      playerTurn = false;
+      setTimeout(() => playerTurn = true, 300);
     }
-    selectingMove = false;
   }
 });
 
 // ================= LOOP =================
 function loop() {
-  
-  setInterval(() => {
-  ctx.fillStyle = "yellow";
-  ctx.fillRect(0, 0, 30, 30);
-}, 500);
-
   drawBackground();
   drawGrid();
 
-  if (selectingMove) drawMoveTiles();
-
+  if (enemy.hp > 0) drawChar(enemy, "#ef5350");
   drawChar(player, "#4fc3f7");
-  drawChar(enemy, "#ef5350");
 
   requestAnimationFrame(loop);
 }
 
 loop();
+</script>
