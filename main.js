@@ -6,27 +6,66 @@ canvas.height = 500;
 canvas.style.width = "800px";
 canvas.style.height = "500px";
 
-const player = { x: 1, y: 1, hp: 100, maxHp: 100 };
+// GRID
+const COLS = 6;
+const ROWS = 3;
+const TILE = 80;
+const OFFSET_X = 100;
+const OFFSET_Y = 100;
 
-function loop() {
+// PERSONAGENS
+const player = { x: 1, y: 1, hp: 100, maxHp: 100 };
+const enemy  = { x: 4, y: 1, hp: 80,  maxHp: 80  };
+
+// ================= DESENHO =================
+function drawBackground() {
   ctx.fillStyle = "#1c3b1c";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
 
-  const px = 200;
-  const py = 250;
+function drawGrid() {
+  ctx.strokeStyle = "rgba(255,255,255,0.3)";
+  for (let x = 0; x <= COLS; x++) {
+    ctx.beginPath();
+    ctx.moveTo(OFFSET_X + x * TILE, OFFSET_Y);
+    ctx.lineTo(OFFSET_X + x * TILE, OFFSET_Y + ROWS * TILE);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= ROWS; y++) {
+    ctx.beginPath();
+    ctx.moveTo(OFFSET_X, OFFSET_Y + y * TILE);
+    ctx.lineTo(OFFSET_X + COLS * TILE, OFFSET_Y + y * TILE);
+    ctx.stroke();
+  }
+}
 
-  ctx.fillStyle = "#4fc3f7";
+function drawChar(c, color) {
+  const px = OFFSET_X + c.x * TILE + TILE / 2;
+  const py = OFFSET_Y + c.y * TILE + TILE / 2;
+
+  // personagem
+  ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(px, py, 26, 0, Math.PI * 2);
   ctx.fill();
 
-  // BARRA DE VIDA (TESTE)
+  // barra de vida
+  const barW = 50;
+  const hpRatio = c.hp / c.maxHp;
+
   ctx.fillStyle = "red";
-  ctx.fillRect(px - 25, py - 45, 50, 6);
+  ctx.fillRect(px - barW / 2, py - 42, barW, 6);
 
   ctx.fillStyle = "lime";
-  ctx.fillRect(px - 25, py - 45, 50, 6);
+  ctx.fillRect(px - barW / 2, py - 42, barW * hpRatio, 6);
+}
 
+// ================= LOOP =================
+function loop() {
+  drawBackground();
+  drawGrid();
+  drawChar(player, "#4fc3f7");
+  drawChar(enemy, "#ef5350");
   requestAnimationFrame(loop);
 }
 
