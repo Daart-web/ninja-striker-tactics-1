@@ -10,8 +10,6 @@ const COLS = 6;
 const ROWS = 3;
 const TILE = 80;
 
-let gameState = "battle";
-
 // PERSONAGENS
 const player = { x: 1, y: 1 };
 const enemy = { x: 4, y: 1 };
