@@ -1,6 +1,11 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+// FORÇA O TAMANHO (resolve o sumiço)
+canvas.width = 800;
+canvas.height = 500;
+
+
 const GRID_COLS = 6;
 const GRID_ROWS = 3;
 const TILE_SIZE = 80;
