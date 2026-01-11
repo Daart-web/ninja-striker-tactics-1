@@ -14,7 +14,8 @@ const TILE = 80;
 const OFFSET_X = 100;
 const OFFSET_Y = 100;
 
-let playerTurn = true;
+let canMove = true;
+let canAttack = true;
 
 // PERSONAGENS
 const player = { x: 1, y: 1, hp: 100, maxHp: 100 };
@@ -51,7 +52,7 @@ function drawChar(c, color) {
   ctx.arc(px, py, 26, 0, Math.PI * 2);
   ctx.fill();
 
-  // Barra de vida
+  // barra de vida
   const barW = 50;
   const hpRatio = c.hp / c.maxHp;
 
@@ -69,9 +70,9 @@ function isAdjacent(a, b) {
   return dx + dy === 1;
 }
 
-// Movimento por clique
+// Movimento
 canvas.addEventListener("click", e => {
-  if (!playerTurn) return;
+  if (!canMove) return;
 
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
@@ -83,24 +84,30 @@ canvas.addEventListener("click", e => {
   if (gx >= 0 && gx < COLS && gy >= 0 && gy < ROWS) {
     player.x = gx;
     player.y = gy;
-    playerTurn = false;
-    setTimeout(() => playerTurn = true, 300);
+    canMove = false; // move uma vez
   }
 });
 
-// Ataque com tecla A
+// Ataque
 document.addEventListener("keydown", e => {
-  if (!playerTurn) return;
+  if (!canAttack) return;
 
   if (e.key.toLowerCase() === "a") {
     if (isAdjacent(player, enemy)) {
       enemy.hp -= 15;
       if (enemy.hp < 0) enemy.hp = 0;
-      playerTurn = false;
-      setTimeout(() => playerTurn = true, 300);
+      canAttack = false;
+      endTurn();
     }
   }
 });
+
+function endTurn() {
+  setTimeout(() => {
+    canMove = true;
+    canAttack = true;
+  }, 400);
+}
 
 // ================= LOOP =================
 function loop() {
